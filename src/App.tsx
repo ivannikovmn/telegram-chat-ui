@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import './App.css'
 
 type Message = {
@@ -7,43 +7,70 @@ type Message = {
   outgoing: boolean
 }
 
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    text: 'GREEN-API test',
-    outgoing: true,
-  },
-  {
-    id: 2,
-    text: 'HTTP API test',
-    outgoing: false,
-  },
-]
-
 function App() {
-  const [message, setMessage] = useState('')
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [idInstance, setIdInstance] = useState('410022750277')
+  const [apiTokenInstance, setApiTokenInstance] = useState('')
+  const [chatId, setChatId] = useState('844045843')
 
-  const handleSend = () => {
+  const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSend = async () => {
     const text = message.trim()
 
-    if (!text) {
+    if (!text || isSending) {
       return
     }
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        id: Date.now(),
-        text,
-        outgoing: true,
-      },
-    ])
+    if (!idInstance || !apiTokenInstance || !chatId) {
+      setError('Enter GREEN-API credentials and chat ID')
+      return
+    }
 
-    setMessage('')
+    setIsSending(true)
+    setError('')
+
+    try {
+      const response = await fetch(
+        `https://${idInstance.slice(0, 4)}.api.green-api.com/waInstance${idInstance}/sendMessage/${apiTokenInstance}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chatId,
+            message: text,
+          }),
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      await response.json()
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: Date.now(),
+          text,
+          outgoing: true,
+        },
+      ])
+
+      setMessage('')
+    } catch {
+      setError('Failed to send message')
+    } finally {
+      setIsSending(false)
+    }
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       handleSend()
     }
@@ -60,11 +87,38 @@ function App() {
         </div>
       </header>
 
+      <section className="settings">
+        <input
+          type="text"
+          placeholder="idInstance"
+          value={idInstance}
+          onChange={(event) => setIdInstance(event.target.value)}
+        />
+
+        <input
+          type="password"
+          placeholder="apiTokenInstance"
+          value={apiTokenInstance}
+          onChange={(event) => setApiTokenInstance(event.target.value)}
+        />
+
+        <input
+          type="text"
+          placeholder="chatId"
+          value={chatId}
+          onChange={(event) => setChatId(event.target.value)}
+        />
+      </section>
+
+      {error && <div className="error">{error}</div>}
+
       <section className="messages">
         {messages.map((item) => (
           <div
             key={item.id}
-            className={`message ${item.outgoing ? 'message-outgoing' : 'message-incoming'}`}
+            className={`message ${
+              item.outgoing ? 'message-outgoing' : 'message-incoming'
+            }`}
           >
             {item.text}
           </div>
@@ -80,8 +134,8 @@ function App() {
           onKeyDown={handleKeyDown}
         />
 
-        <button type="button" onClick={handleSend}>
-          Send
+        <button type="button" onClick={handleSend} disabled={isSending}>
+          {isSending ? 'Sending...' : 'Send'}
         </button>
       </footer>
     </main>

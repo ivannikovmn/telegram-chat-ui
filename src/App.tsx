@@ -1,5 +1,10 @@
-import { useState, type KeyboardEvent } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import './App.css'
+import {
+  deleteNotification,
+  receiveNotification,
+} from './greenApi'
+
 
 type Message = {
   id: number
@@ -69,6 +74,61 @@ function App() {
       setIsSending(false)
     }
   }
+
+useEffect(() => {
+  if (!idInstance || !apiTokenInstance) {
+    return
+  }
+
+  let stopped = false
+
+  const receiveMessages = async () => {
+    while (!stopped) {
+      try {
+        const notification = await receiveNotification(
+          idInstance,
+          apiTokenInstance,
+        )
+
+        if (!notification) {
+          continue
+        }
+
+        const messageData = notification.body.messageData
+        const text = messageData?.textMessageData?.textMessage
+
+        if (messageData?.typeMessage === 'textMessage' && text) {
+          setMessages((currentMessages) => [
+            ...currentMessages,
+            {
+              id: Date.now(),
+              text,
+              outgoing: false,
+            },
+          ])
+        }
+
+        await deleteNotification(
+          idInstance,
+          apiTokenInstance,
+          notification.receiptId,
+        )
+      } catch {
+        if (!stopped) {
+          setError('Failed to receive message')
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+      }
+    }
+  }
+
+  receiveMessages()
+
+  return () => {
+    stopped = true
+  }
+}, [idInstance, apiTokenInstance])  
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {

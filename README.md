@@ -12,11 +12,19 @@ The interface is based on the visual concept of Telegram Web and intentionally p
 
 ## Features
 
-- Connect to a GREEN-API Telegram instance
-- Specify a recipient
-- Send text messages
-- Receive text messages
-- Display the conversation in a simple chat interface
+* Connect to a GREEN-API Telegram instance
+* Create a chat by recipient phone number
+* Send text messages
+* Receive text messages
+* Display the conversation in a simple chat interface
+
+## How it works
+
+1. Enter the GREEN-API instance ID and API token
+2. Enter the recipient's phone number
+3. Create a chat
+4. Send a text message from the web interface
+5. Receive replies from Telegram in the web interface
 
 ## Development
 
@@ -44,8 +52,8 @@ Only text messages are supported, as required by the assignment.
 
 ## Stack
 
-- React
-- TypeScript
-- Vite
-- GREEN-API Telegram
-- ESLint
+* React
+* TypeScript
+* Vite
+* GREEN-API Telegram
+* ESLint

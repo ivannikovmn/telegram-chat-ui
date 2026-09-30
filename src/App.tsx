@@ -14,7 +14,7 @@ type Message = {
 }
 
 function App() {
-  const [idInstance, setIdInstance] = useState('410022750277')
+  const [idInstance, setIdInstance] = useState('')
   const [apiTokenInstance, setApiTokenInstance] = useState('')
   const [recipientPhone, setRecipientPhone] = useState('')
   const [chatId, setChatId] = useState('')
